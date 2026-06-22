@@ -1,0 +1,7 @@
+frames/
+results/
+*.ply
+*.npy
+__pycache__/
+*.pyc
+.DS_Store
