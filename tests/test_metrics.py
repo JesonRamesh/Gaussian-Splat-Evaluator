@@ -56,10 +56,18 @@ def test_detect_popping_silent_on_smooth_series():
     assert out["popping_indices"] == []
 
 
-def test_detect_popping_threshold_is_configurable():
-    rng = np.random.default_rng(1)
-    series = 1.0 + 0.05 * rng.standard_normal(80)
-    series[40] += 0.4  # a modest bump
-    strict = detect_popping(series, k=8.0)["popping_indices"]
-    loose = detect_popping(series, k=2.0)["popping_indices"]
-    assert len(loose) >= len(strict)
+def test_detect_popping_absolute_floor_ignores_subpixel_noise():
+    # Mirrors the real 900-frame capture: flat ~7px baseline, sub-pixel noise,
+    # no real pops. The min_abs floor must keep this silent (was 13 phantoms).
+    rng = np.random.default_rng(2)
+    series = 7.0 + 0.03 * rng.standard_normal(900)
+    out = detect_popping(series, k=4.0)  # default min_abs floor
+    assert out["popping_indices"] == []
+
+
+def test_detect_popping_min_abs_is_configurable():
+    rng = np.random.default_rng(3)
+    series = 7.0 + 0.03 * rng.standard_normal(200)
+    series[100] += 0.5  # half-pixel bump: real-ish but small
+    assert 100 not in detect_popping(series, min_abs=1.0)["popping_indices"]
+    assert 100 in detect_popping(series, min_abs=0.2)["popping_indices"]

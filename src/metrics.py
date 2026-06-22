@@ -73,15 +73,19 @@ def _rolling_median(x: np.ndarray, window: int) -> np.ndarray:
 # Design decision: detect popping as upper-tail outliers of the *detrended*
 # series using a robust (median + MAD) z-score — i.e. a Hampel filter. We
 # detrend first so a fast-but-smooth camera section doesn't trip the alarm, and
-# we use MAD instead of std so the spikes don't inflate their own threshold. The
-# sensitivity knob `k` is the only popping threshold and is fully configurable,
-# never hardcoded. One-sided (upper) only: a pop always *raises* magnitude.
-# Alternative: a fixed absolute magnitude threshold — rejected because the
-# baseline shifts with camera speed, so any constant would mis-fire.
+# we use MAD instead of std so the spikes don't inflate their own threshold.
+# One-sided (upper) only: a pop always *raises* magnitude. Two configurable
+# knobs, never hardcoded: `k` (relative sensitivity) and `min_abs` (an ABSOLUTE
+# floor, in px). The floor exists because on a very clean baseline MAD shrinks
+# to near-zero, so a purely relative k*sigma threshold would flag sub-pixel
+# noise as "popping"; a real pop must clear both. Effective threshold is
+# therefore max(k*sigma, min_abs). Alternative: relative-only — rejected, it
+# manufactured 13 phantom events on the clean 900-frame capture.
 def detect_popping(
     magnitudes: np.ndarray,
     window: int = 5,
     k: float = 4.0,
+    min_abs: float = 1.0,
 ) -> dict:
     mags = np.asarray(magnitudes, dtype=np.float64)
     if mags.ndim != 1:
@@ -94,9 +98,8 @@ def detect_popping(
     # 1.4826 rescales MAD to a std-equivalent for normal-ish noise.
     mad = np.median(np.abs(residual - np.median(residual)))
     sigma = 1.4826 * mad if mad > 0 else 0.0
-    threshold = k * sigma
-    # If the series is essentially flat (sigma==0) nothing can be a spike.
-    is_pop = (residual > threshold) if sigma > 0 else np.zeros_like(mags, dtype=bool)
+    threshold = max(k * sigma, min_abs)  # absolute floor guards a clean baseline
+    is_pop = residual > threshold
 
     return {
         "baseline": baseline,
@@ -104,6 +107,7 @@ def detect_popping(
         "sigma": float(sigma),
         "threshold": float(threshold),
         "k": float(k),
+        "min_abs": float(min_abs),
         "window": int(window),
         "is_pop": is_pop,
         "popping_indices": np.nonzero(is_pop)[0].tolist(),
