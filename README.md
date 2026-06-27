@@ -167,6 +167,16 @@ Evaluated on **150 frames** rendered by [Deformable-3D-Gaussians](https://github
 | Verdict | *0 popping event(s) detected at this spatial scale; baseline flow 4.12 px* |
 
 <div align="center">
+
+| t = 0 | t = 0.20 | t = 0.40 | t = 0.60 | t = 0.80 | t = 1.0 |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| <img src="assets/bb_frame_00000.png" width="130"> | <img src="assets/bb_frame_00030.png" width="130"> | <img src="assets/bb_frame_00060.png" width="130"> | <img src="assets/bb_frame_00090.png" width="130"> | <img src="assets/bb_frame_00120.png" width="130"> | <img src="assets/bb_frame_00149.png" width="130"> |
+
+<sub><em>Six evenly spaced frames across the full animation cycle — balls rise, reach peak separation, fall back to the platform, and return to rest. These are rendered by Deformable-3DGS from a fixed camera viewpoint.</em></sub>
+
+</div>
+
+<div align="center">
 <img src="assets/report_bouncingballs.png" width="90%" alt="Bouncingballs temporal report">
 <br><sub><em>Temporal-consistency report for 150 time-interpolated frames of the D-NeRF bouncingballs scene. Flow (blue) tracks smoothly under the baseline (orange) and never reaches the popping threshold (dashed red). The PSNR U-shape reflects ball physics — frames are most similar at rest and least similar at peak velocity (~frames 40–65) — not rendering artifacts.</em></sub>
 </div>
