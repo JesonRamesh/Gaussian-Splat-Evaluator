@@ -118,6 +118,12 @@ python -m pytest tests/test_metrics.py -q
 
 ## Results
 
+Two scenes have been evaluated: a static real-world reconstruction and a dynamic synthetic animation.
+
+---
+
+### RoboScene+ — static fly-through (900 frames, CPU)
+
 Evaluated on a **900-frame** constant-speed fly-through of the RoboScene+ splat (899 consecutive pairs, ~21 min on CPU).
 
 | Metric | Value |
@@ -136,7 +142,7 @@ The **headline figure at the top** makes the negative result *legible*: the flow
 <br><sub><em>All 899 pairs fall in a tight 6.6–7.8 px band, far below the +1.0 px popping threshold.</em></sub>
 </div>
 
-### Capture quality matters
+#### Capture quality matters
 
 The metric only works when consecutive frames are *near-identical* — a slow, smooth camera path. An initial **hand-recorded** capture moved the camera too fast and unevenly, drowning popping under genuine parallax. Re-recording at **constant slow speed** collapsed the baseline and removed every phantom detection:
 
@@ -144,6 +150,28 @@ The metric only works when consecutive frames are *near-identical* — a slow, s
 <img src="assets/capture_comparison.png" width="100%" alt="Capture comparison">
 <br><sub><em>Variable hand-held capture vs constant-speed capture across five quality indicators (real numbers from both runs).</em></sub>
 </div>
+
+---
+
+### D-NeRF bouncingballs — dynamic scene, time interpolation (150 frames, GPU)
+
+Evaluated on **150 frames** rendered by [Deformable-3D-Gaussians](https://github.com/ingra14m/Deformable-3D-Gaussians) trained on the [D-NeRF](https://github.com/albertpumarola/D-NeRF) `bouncingballs` scene (149 pairs, 11.5 s on RTX 4070 Ti Super). The rendering mode fixes the camera and interpolates time across the full animation cycle — so consecutive frames differ only due to scene dynamics, not camera motion.
+
+| Metric | Value |
+|---|---|
+| Frames / pairs | 150 / 149 |
+| Flow magnitude (p99/pair) | median **4.12 px** · max 5.80 px |
+| Frame-to-frame change | **0.46 px** |
+| PSNR | mean **39.11 dB** · min 33.60 dB |
+| **Popping events** | **0** |
+| Verdict | *0 popping event(s) detected at this spatial scale; baseline flow 4.12 px* |
+
+<div align="center">
+<img src="assets/report_bouncingballs.png" width="90%" alt="Bouncingballs temporal report">
+<br><sub><em>Temporal-consistency report for 150 time-interpolated frames of the D-NeRF bouncingballs scene. Flow (blue) tracks smoothly under the baseline (orange) and never reaches the popping threshold (dashed red). The PSNR U-shape reflects ball physics — frames are most similar at rest and least similar at peak velocity (~frames 40–65) — not rendering artifacts.</em></sub>
+</div>
+
+The lower PSNR trough (~33–34 dB at mid-sequence) co-occurs with *higher* flow magnitude, which is consistent with real scene dynamics: the balls move fastest at mid-arc, so consecutive frames naturally diverge more. Critically, there is no impulsive spike in the flow panel — the variation is gradual and physics-driven, not a rendering discontinuity. A genuine popping event would produce a sharp isolated spike in the flow panel with no corresponding smooth ramp-up.
 
 &nbsp;
 
@@ -192,7 +220,9 @@ The metric only works when consecutive frames are *near-identical* — a slow, s
 
 1. Teed & Deng, *RAFT: Recurrent All-Pairs Field Transforms for Optical Flow*, ECCV 2020 — [arXiv:2003.12039](https://arxiv.org/abs/2003.12039)
 2. Kerbl et al., *3D Gaussian Splatting for Real-Time Radiance Field Rendering*, SIGGRAPH 2023 — [project page](https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/)
-3. Companion data source — [3D-Spatial-Reconstruction](https://github.com/JesonRamesh/3D-Spatial-Reconstruction)
+3. Yang et al., *Deformable 3D Gaussians for High-Fidelity Monocular Dynamic Scene Reconstruction*, CVPR 2024 — [GitHub](https://github.com/ingra14m/Deformable-3D-Gaussians)
+4. Pumarola et al., *D-NeRF: Neural Radiance Fields for Dynamic Scenes*, CVPR 2021 — [GitHub](https://github.com/albertpumarola/D-NeRF)
+5. Companion data source — [3D-Spatial-Reconstruction](https://github.com/JesonRamesh/3D-Spatial-Reconstruction)
 
 &nbsp;
 
